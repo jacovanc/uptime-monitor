@@ -1,8 +1,12 @@
 package monitor
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 )
 
@@ -13,33 +17,56 @@ type DataStorer interface {
 type Monitor struct {
 	ds DataStorer
 	isRunning bool
+	websites []string
+	interval time.Duration
 }
 
 // Config - TODO move to config
-const intervalSeconds time.Duration = 5
-var websites = []string{
-	"https://www.google.com",
-	"https://www.facebook.com",
-}
+const defaultInterval time.Duration = 5 * time.Second
 
-func NewMonitor(ds DataStorer) *Monitor {
+func NewMonitor(ds DataStorer) (*Monitor, error) {
+	// Config
+	var websitesString = os.Getenv("WEBSITES")
+	websites := strings.Split(websitesString, ",")
+
+	if len(websites) == 0 {
+		// return error
+		return nil, errors.New("no websites to monitor")
+	}
+
+	var intervalString = os.Getenv("INTERVAL_SECONDS")
+	var interval time.Duration
+
+	if intervalString == "" {
+		interval = defaultInterval
+	} else {
+		var err error
+		interval, err = time.ParseDuration(intervalString + "s")
+		if err != nil {
+			return nil, errors.New("invalid interval_seconds configuration")
+		}
+	}
+
 	return &Monitor{
 		ds: ds,
 		isRunning: false,
-	}
+		websites: websites,
+		interval: interval,
+	}, nil
 }
 
 func (m *Monitor) Start() {
+	fmt.Println(m.interval, m.websites)
     m.isRunning = true
     for m.isRunning {
-        for _, website := range websites {
+        for _, website := range m.websites {
 			// Ping inside a goroutine to prevent blocking the loop
             go func(website string) {
                 log.Println("Pinging website", website)
                 m.pingWebsite(website)
             }(website)
         }
-        time.Sleep(intervalSeconds * time.Second)
+        time.Sleep(m.interval * time.Second)
     }
 }
 

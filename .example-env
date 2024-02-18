@@ -1,0 +1,3 @@
+DB_PATH="uptime-monitor.db"
+WEBSITES="http://google.com,http://yahoo.com,http://bing.com"
+INTERVAL_SECONDS=60
