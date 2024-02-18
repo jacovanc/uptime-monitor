@@ -25,6 +25,8 @@ func NewSQLiteStorer(dataSourceName string) (*SQLiteStorer, error) {
 		dataSourceName = defaultDbPath
 	}
 
+    fmt.Println("Using SQLite database at", dataSourceName)
+
     db, err := sqlx.Connect("sqlite3", dataSourceName)
     if err != nil {
         return nil, err
