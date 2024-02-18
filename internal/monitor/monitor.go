@@ -87,6 +87,7 @@ func (m *Monitor) pingWebsite(website string) {
 	latency := time.Since(start)
 
 	if(err != nil) {
+		log.Println("Error pinging: ", err)
 		// There was an issue pinging the website, it is probably down
 		err = m.ds.StoreWebsiteStatus(website, "down", latency)
 		if err != nil {
