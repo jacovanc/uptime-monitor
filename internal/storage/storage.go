@@ -12,8 +12,8 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-const migrationsPath = "file://migrations"
-const defaultDbPath = "uptime-monitor.db"
+const migrationsPath = "migrations"
+const defaultDbPath = "../uptime-monitor.db"
 
 type SQLiteStorer struct {
 	db *sqlx.DB
@@ -33,6 +33,7 @@ func NewSQLiteStorer(dataSourceName string) (*SQLiteStorer, error) {
     }
 
     storer := &SQLiteStorer{db: db, dbPath: dataSourceName}
+    
     if err := storer.runMigrations(); err != nil {
         return nil, err
     }
@@ -57,7 +58,7 @@ func (s *SQLiteStorer) runMigrations() error {
 }
 
 func (s *SQLiteStorer) StoreWebsiteStatus(website string, status string, latency time.Duration) error {
-	query := `INSERT INTO website_status (website, status, lentency) VALUES (?, ?, ?)`
+	query := `INSERT INTO website_status (website, status, latency) VALUES (?, ?, ?)`
 	
 	latencyMs := latency.Milliseconds()
 
