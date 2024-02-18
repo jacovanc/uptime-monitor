@@ -22,7 +22,7 @@ type Monitor struct {
 }
 
 // Config - TODO move to config
-const defaultInterval time.Duration = 5 * time.Second
+const defaultInterval time.Duration = 60 * time.Second
 
 func NewMonitor(ds DataStorer) (*Monitor, error) {
 	// Config
@@ -47,6 +47,8 @@ func NewMonitor(ds DataStorer) (*Monitor, error) {
 		}
 	}
 
+	log.Println("Creating monitor with interval", interval, "and websites", websites)
+
 	return &Monitor{
 		ds: ds,
 		isRunning: false,
@@ -66,7 +68,7 @@ func (m *Monitor) Start() {
                 m.pingWebsite(website)
             }(website)
         }
-        time.Sleep(m.interval * time.Second)
+        time.Sleep(m.interval)
     }
 }
 
@@ -86,10 +88,16 @@ func (m *Monitor) pingWebsite(website string) {
 
 	if(err != nil) {
 		// There was an issue pinging the website, it is probably down
-		m.ds.StoreWebsiteStatus(website, "down", latency)
+		err = m.ds.StoreWebsiteStatus(website, "down", latency)
+		if err != nil {
+			log.Println("Error storing website status:", err)
+		}
 		return
 	}
 	defer resp.Body.Close()
 
-	m.ds.StoreWebsiteStatus(website, "up", latency)
+	err = m.ds.StoreWebsiteStatus(website, "up", latency)
+	if err != nil {
+		log.Println("Error storing website status:", err)
+	}
 }

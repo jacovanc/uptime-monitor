@@ -20,7 +20,7 @@ This project involves creating a website uptime monitor with a dashboard, using 
 - [ ] Alert downtime or high latency to configured email address(es) using Mailgun
 
 ## Config
-- [ ] Add configuration file for defining the websites to monitor, the emails to notify, and perhaps trigger limits for things like latency/downtime length for firing an alert
+- [x] Add configuration file for defining the websites to monitor, the emails to notify, and perhaps trigger limits for things like latency/downtime length for firing an alert
 
 ## Web Dashboard Development
 - [ ] Set up a web server using a Go web framework (e.g., Gin or Echo).
@@ -40,3 +40,16 @@ This project involves creating a website uptime monitor with a dashboard, using 
 
 ## Deployment
 - [ ] Deploy the application on a suitable platform (ideally something simple like Heroku - just ensure that any PaaS does not sleep after x time). Perhaps DigitalOcean App Platform?
+
+# Setup
+The sqlite3 dependency requires CGO_ENABLED=1, which means we need gcc installed on the machine to compile C code.
+
+## Build
+```make
+make build
+```
+
+## Run
+```make 
+make run
+```
