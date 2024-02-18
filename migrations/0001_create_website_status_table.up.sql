@@ -1,0 +1,8 @@
+
+CREATE TABLE IF NOT EXISTS website_status (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    website TEXT NOT NULL,
+    status TEXT NOT NULL,
+    latency INTEGER,
+    checked_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
