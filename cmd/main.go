@@ -28,6 +28,7 @@ func main() {
 	emailSender := mail.CreateMailgunSender(
 		os.Getenv("MAILGUN_DOMAIN"),
 		os.Getenv("MAILGUN_API_KEY"),
+		os.Getenv("MAILGUN_SENDER"),
 	)
 
 	err = emailSender.SendEmail([]string{"jaco@vancran.com"}, "Hello", "Hello from Uptime Monitor")
