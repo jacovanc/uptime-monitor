@@ -4,9 +4,9 @@ This project involves creating a website uptime monitor with a dashboard, using 
 
 ## Setup and Initial Development
 - [x] Set up Go development environment and base structure.
-- [ ] Initialize SQLite database with SQLx 
-    - [ ] Database file should be automatically created if it doesn't exist
-    - [ ] Sort issues for using SQLite3 (requires gcc)
+- [x] Initialize SQLite database with SQLx 
+    - [x] Database file should be automatically created if it doesn't exist
+    - [x] Sort issues for using SQLite3 (requires gcc)
 
 ## Monitoring Logic
 - [x] Implement a function to check website status and latency using Go's `http` package.
@@ -40,6 +40,9 @@ This project involves creating a website uptime monitor with a dashboard, using 
 
 ## Deployment
 - [ ] Deploy the application on a suitable platform (ideally something simple like Heroku - just ensure that any PaaS does not sleep after x time). Perhaps DigitalOcean App Platform?
+
+## Further
+ - [ ] Consider how to prevent internet outage on the uptime-monitor host from marking tracked websites as down. (Server downtime is easy as we just wont have any db rows for that time period, but if just the internet is down it will have rows marked as 'down'). 
 
 # Setup
 The sqlite3 dependency requires CGO_ENABLED=1, which means we need gcc installed on the machine to compile C code.
