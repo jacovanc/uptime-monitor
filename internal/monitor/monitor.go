@@ -71,6 +71,7 @@ func NewMonitor(ds DataStorer, es mail.EmailSender) (*Monitor, error) {
 	}
 
 	log.Println("Creating monitor with interval", interval, "and websites", websites)
+	log.Println("Down alert threshold is", downAlertThreshold, "and alert emails are", alertEmails)
 
 	// TODO: Set up the status history using the DB historical data rather than assuming empty
 
@@ -101,7 +102,7 @@ func (m *Monitor) Start() {
                 log.Println("Pinging website", website)
                 status, latency := m.pingWebsite(website)
 
-				m.updateStatusHistory(website, status)
+				m.appendStatusHistory(website, status)
 
 				if m.shouldSendDownAlert(website) {
 					log.Println("Sending down alert for", website)
@@ -109,6 +110,9 @@ func (m *Monitor) Start() {
 					if err != nil {
 						log.Println("Error sending down alert: ", err)
 					}
+
+					// Reset the status history to prevent sending multiple alerts
+					m.statusHistory[website] = []string{}
 				}
 
 				err := m.ds.StoreWebsiteStatus(website, status, latency)
@@ -146,7 +150,7 @@ func (m *Monitor) pingWebsite(website string) (status string, latency time.Durat
 	return "up", latency
 }
 
-func (m *Monitor) updateStatusHistory(website string, status string) {
+func (m *Monitor) appendStatusHistory(website string, status string) {
 	// Update the status history
 	m.statusHistory[website] = append(m.statusHistory[website], status)
 
