@@ -1,13 +1,13 @@
-***REMOVED***
-***REMOVED***
-***REMOVED***
-***REMOVED***
+# Monitor
+DB_PATH="uptime-monitor.db"
+WEBSITES="https://yahoo.com,https://bing.com" # Comma separated list of websites to track the uptime of
+INTERVAL_SECONDS=60 # How often it checks each website
 
-***REMOVED***
-***REMOVED***
-***REMOVED***
+# Alerts
+DOWN_ALERT_THRESHOLD=5 # Email alerts for websites that are down will only be sent when down for x consecutive checks
+ALERT_EMAILS="example@example.com,example2@example.com" # Comma separated list of the emails to alert when websites are down
 
-***REMOVED***
-***REMOVED***
-***REMOVED***
-MAILGUN_API_KEY="***REMOVED***" # The API key for mailgun
+# Mailgun config
+MAILGUN_SENDER="alerts@example.com" # The sending email address 
+MAILGUN_DOMAIN="something.example.com" # The domain to send from
+MAILGUN_API_KEY="key-goes-here" # The API key for mailgun

@@ -24,7 +24,7 @@ This project involves creating a website uptime monitor with a dashboard, using 
     - [x] Database file should be automatically created if it doesn't exist
     - [x] Sort issues for using SQLite3 (requires gcc)
 
-#***REMOVED***ing Logic
+## Monitoring Logic
 - [x] Implement a function to check website status and latency using Go's `http` package.
 - [x] Write logic to store the status and latency results in SQLite database.
 
@@ -32,7 +32,7 @@ This project involves creating a website uptime monitor with a dashboard, using 
 - [x] Implement a scheduler in Go to check websites at regular intervals.
 - [x] Ensure the monitoring process runs continuously or as a background task.
 
-#***REMOVED***
+## Alerts
 - [x] Alert downtime or high latency to configured email address(es) using Mailgun
 - [ ] Setup mock implementation of the EmailSender implementation for testing purposes
 
