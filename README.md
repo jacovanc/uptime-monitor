@@ -1,4 +1,20 @@
-# Website Uptime Monitor Project TODO List
+# Setup
+The sqlite3 dependency requires CGO_ENABLED=1, which means we need gcc installed on the machine to compile C code. For windows the easiest way is to install [MSYS2](https://www.msys2.org/)
+
+## Config
+Create a .env file (can copy the .example-env file and edit). Update all with appropriate settings - they are all required.
+
+## Build
+```make
+make build
+```
+
+## Run
+```make 
+make run
+```
+
+# TODO List
 
 This project involves creating a website uptime monitor with a dashboard, using Go for backend development and SQLite for database management. The monitor will track the status and latency of websites, and display historical data in chart form.
 
@@ -29,6 +45,9 @@ This project involves creating a website uptime monitor with a dashboard, using 
 ## Config
 - [x] Add configuration file for defining the websites to monitor, the emails to notify, and perhaps trigger limits for things like latency/downtime length for firing an alert
 
+## Testing
+- [ ] Implement useful tests. 
+
 ## Web Dashboard Development
 - [ ] Set up a web server using a Go web framework (e.g., Gin or Echo).
 - [ ] Develop routes and handlers for the dashboard and website details.
@@ -42,24 +61,8 @@ This project involves creating a website uptime monitor with a dashboard, using 
 - [ ] Design a user-friendly interface for the dashboard.
 - [ ] Ensure clear display of website statuses and easy navigation to historical data.
 
-## Testing
-- [ ] Implement useful tests. 
-
 ## Deployment
 - [ ] Deploy the application on a suitable platform (ideally something simple like Heroku - just ensure that any PaaS does not sleep after x time). Perhaps DigitalOcean App Platform?
 
 ## Further
  - [ ] Consider how to prevent internet outage on the uptime-monitor host from marking tracked websites as down. (Server downtime is easy as we just wont have any db rows for that time period, but if just the internet is down it will have rows marked as 'down'). 
-
-# Setup
-The sqlite3 dependency requires CGO_ENABLED=1, which means we need gcc installed on the machine to compile C code.
-
-## Build
-```make
-make build
-```
-
-## Run
-```make 
-make run
-```
