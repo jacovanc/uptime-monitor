@@ -31,11 +31,6 @@ func main() {
 		os.Getenv("MAILGUN_SENDER"),
 	)
 
-	err = emailSender.SendEmail([]string{"jaco@vancran.com"}, "Hello", "Hello from Uptime Monitor")
-	if err != nil {
-		log.Fatal("Error sending email: ", err)
-	}
-
 	monitor, err := monitor.NewMonitor(sqliteStorer, emailSender)
 	if err != nil {
 		log.Fatal("Error creating monitor: ", err)
