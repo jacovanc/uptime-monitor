@@ -10,4 +10,4 @@ ALERT_EMAILS="example@example.com,example2@example.com" # Comma separated list o
 # Mailgun config
 MAILGUN_SENDER="alerts@example.com" # The sending email address 
 MAILGUN_DOMAIN="something.example.com" # The domain to send from
-MAILGUN_API_KEY="***REMOVED***" # The API key for mailgun
+MAILGUN_API_KEY="key-goes-here" # The API key for mailgun
