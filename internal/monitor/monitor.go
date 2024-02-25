@@ -156,8 +156,6 @@ func (m *Monitor) tick(website string) {
 
 // Pings a website and returns the status and latency.
 func (m *Monitor) pingWebsite(website string) (status int, latency time.Duration) {
-	log.Println("hit", website)
-
 	start := time.Now()
 	var statusCode int
 
@@ -165,12 +163,13 @@ func (m *Monitor) pingWebsite(website string) (status int, latency time.Duration
 	resp, err := http.Get(website)
 	latency = time.Since(start)
 
-	log.Println("Pinged", website, "in", latency)
 	if(err != nil) {
 		log.Println("Error pinging: ", err)
 		statusCode = 0
 		return statusCode, latency
 	}
+	log.Println("Pinged", website, "in", latency)
+
 	defer resp.Body.Close()
 	
 	// Get status code
