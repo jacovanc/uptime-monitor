@@ -57,12 +57,12 @@ func (s *SQLiteStorer) runMigrations() error {
     return nil
 }
 
-func (s *SQLiteStorer) StoreWebsiteStatus(website string, status string, latency time.Duration) error {
-	query := `INSERT INTO website_status (website, status, latency) VALUES (?, ?, ?)`
+func (s *SQLiteStorer) StoreWebsiteStatus(website string, statusCode int, latency time.Duration) error {
+	query := `INSERT INTO website_status (website, status_code, latency) VALUES (?, ?, ?)`
 	
 	latencyMs := latency.Milliseconds()
 
-	_, err := s.db.Exec(query, website, status, latencyMs)
+	_, err := s.db.Exec(query, website, statusCode, latencyMs)
 	if(err != nil) {
 		return err
 	}
