@@ -14,6 +14,11 @@ make build
 make run
 ```
 
+## Test
+```bash
+go test ./...
+```
+
 # TODO List
 
 This project involves creating a website uptime monitor with a dashboard, using Go for backend development and SQLite for database management. The monitor will track the status and latency of websites, and display historical data in chart form.
