@@ -14,6 +14,11 @@ make build
 make run
 ```
 
+## Test
+```bash
+go test ./...
+```
+
 # TODO List
 
 This project involves creating a website uptime monitor with a dashboard, using Go for backend development and SQLite for database management. The monitor will track the status and latency of websites, and display historical data in chart form.
@@ -37,10 +42,7 @@ This project involves creating a website uptime monitor with a dashboard, using 
 - [ ] Setup mock implementation of the EmailSender implementation for testing purposes
 
 ## Improve concurrency usage, options:
-- [ ] Use a semaphore (challen) "ping limit" to ensure there is never more goroutines active than the number of websites (preventing overlap of the same website)?
-- [ ] Add a timeout to ping requests lower than the sleep interval to prevent overlapping calls?
-- [ ] Use different goroutines per website rather than per ping? Ensures that the pings for each website are spaced out correctly regardless of how long they take?
-*I think preventing the same website from ever having overlapping goroutines is the right improvement. This prevents race conditions as overlapping goroutines only matters if they are accessing the same key on statusHistory (the website is the key). This also means that we never fire another ping for a website while still waiting on the result*
+- [x] Use different goroutines per website rather than per ping. Ensures that the pings for each website are spaced out correctly regardless of how long they take.
 
 ## Config
 - [x] Add configuration file for defining the websites to monitor, the emails to notify, and perhaps trigger limits for things like latency/downtime length for firing an alert
