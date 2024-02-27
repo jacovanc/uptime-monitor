@@ -11,15 +11,35 @@ import (
 	"strings"
 	"time"
 	"uptime-monitor/internal/mail"
+	"uptime-monitor/internal/storage"
 )
 
-// DataStorer is the interface that wraps methods to store monitoring data.
-type DataStorer interface {
-    StoreWebsiteStatus(website string, statusCode int, latency time.Duration) error
+// Pings a website and returns the status and latency.
+func pingWebsite(website string) (status int, latency time.Duration) {
+	start := time.Now()
+	var statusCode int
+
+	// Ping website
+	resp, err := http.Get(website)
+	latency = time.Since(start)
+
+	if(err != nil) {
+		log.Println("Error pinging: ", err)
+		statusCode = 0
+		return statusCode, latency
+	}
+	log.Println("Pinged", website, "in", latency)
+
+	defer resp.Body.Close()
+	
+	// Get status code
+	statusCode = resp.StatusCode
+
+	return statusCode, latency
 }
 
 type Monitor struct {
-	ds DataStorer
+	ds storage.DataStorer
 	es mail.EmailSender
 	isRunning bool
 	cancelFunc context.CancelFunc
@@ -36,7 +56,7 @@ type Monitor struct {
 // Config - TODO move to config
 const defaultInterval time.Duration = 60 * time.Second
 
-func NewMonitor(ds DataStorer, es mail.EmailSender) (*Monitor, error) {
+func NewMonitor(ds storage.DataStorer, es mail.EmailSender) (*Monitor, error) {
 	// Config
 	var websitesString = os.Getenv("WEBSITES")
 	websites := strings.Split(websitesString, ",")
@@ -133,7 +153,7 @@ func (m *Monitor) Stop() {
 // Includes pinging the website, updating the status history, and sending alerts if necessary.
 func (m *Monitor) tick(website string) {
 	log.Println("Pinging website", website)
-	statusCode, latency := m.pingWebsite(website)
+	statusCode, latency := pingWebsite(website)
 
 	m.appendStatusHistory(website, statusCode)
 
@@ -152,30 +172,6 @@ func (m *Monitor) tick(website string) {
 		// Reset the status history to prevent sending multiple alerts
 		m.statusHistory[website] = []int{}
 	}
-}
-
-// Pings a website and returns the status and latency.
-func (m *Monitor) pingWebsite(website string) (status int, latency time.Duration) {
-	start := time.Now()
-	var statusCode int
-
-	// Ping website
-	resp, err := http.Get(website)
-	latency = time.Since(start)
-
-	if(err != nil) {
-		log.Println("Error pinging: ", err)
-		statusCode = 0
-		return statusCode, latency
-	}
-	log.Println("Pinged", website, "in", latency)
-
-	defer resp.Body.Close()
-	
-	// Get status code
-	statusCode = resp.StatusCode
-
-	return statusCode, latency
 }
 
 // Appends the status to the status history and removes the oldest entry if far enough out of bounds for the required logic.
