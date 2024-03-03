@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 	"uptime-monitor/internal/mail"
 	"uptime-monitor/internal/monitor"
 	"uptime-monitor/internal/storage"
-	"uptime-monitor/internal/webserver"
 
 	"github.com/joho/godotenv"
 )
@@ -38,5 +40,12 @@ func main() {
 
 	go monitor.Start()
 
-	webserver.Start()
+	// Block waiting for shutdown signal
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM) // Listen for SIGINT and SIGTERM 
+	<-sigs // Block until channel receives a signal
+	
+	fmt.Println("Shutting down")
+	monitor.Stop()
+	fmt.Println("Shut down");
 }
