@@ -146,6 +146,7 @@ func (m *Monitor) Stop() {
 		// Call the cancel function to stop the goroutines
 		m.cancelFunc()
 		m.isRunning = false
+		m.cancelFunc = nil
 	}
 }
 
