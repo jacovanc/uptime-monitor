@@ -12,9 +12,6 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-type DataStorer interface {
-    StoreWebsiteStatus(website string, statusCode int, latency time.Duration) error
-}
 
 const migrationsPath = "migrations"
 const defaultDbPath = "../uptime-monitor.db"

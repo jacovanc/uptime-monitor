@@ -10,9 +10,15 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"uptime-monitor/internal/mail"
-	"uptime-monitor/internal/storage"
 )
+
+type DataStorer interface {
+    StoreWebsiteStatus(website string, statusCode int, latency time.Duration) error
+}
+
+type EmailSender interface {
+	SendEmail(to []string, subject string, body string) error
+}
 
 // Pings a website and returns the status and latency.
 func pingWebsite(website string) (status int, latency time.Duration) {
@@ -39,8 +45,8 @@ func pingWebsite(website string) (status int, latency time.Duration) {
 }
 
 type Monitor struct {
-	ds storage.DataStorer
-	es mail.EmailSender
+	ds DataStorer
+	es EmailSender
 	isRunning bool
 	cancelFunc context.CancelFunc
 	
@@ -56,7 +62,7 @@ type Monitor struct {
 // Config - TODO move to config
 const defaultInterval time.Duration = 60 * time.Second
 
-func NewMonitor(ds storage.DataStorer, es mail.EmailSender) (*Monitor, error) {
+func NewMonitor(ds DataStorer, es EmailSender) (*Monitor, error) {
 	// Config
 	var websitesString = os.Getenv("WEBSITES")
 	websites := strings.Split(websitesString, ",")

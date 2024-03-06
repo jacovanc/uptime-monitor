@@ -32,7 +32,6 @@ func main() {
 		os.Getenv("MAILGUN_API_KEY"),
 		os.Getenv("MAILGUN_SENDER"),
 	)
-
 	monitor, err := monitor.NewMonitor(sqliteStorer, emailSender)
 	if err != nil {
 		log.Fatal("Error creating monitor: ", err)
