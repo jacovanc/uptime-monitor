@@ -9,29 +9,26 @@ import (
 
 // MailgunSender implements EmailSender for Mailgun
 type MailgunSender struct {
-    domain string
-    apiKey string
+	mailgun mailgun.Mailgun
 	sender string
 }
 
-func CreateMailgunSender(domain string, apiKey string, sender string) EmailSender {
+func CreateMailgunSender(domain string, apiKey string, sender string) *MailgunSender {
+	mg := mailgun.NewMailgun(domain, apiKey)
+	mg.SetAPIBase(mailgun.APIBaseEU)
+
 	return &MailgunSender{
-		domain: domain,
-		apiKey: apiKey,
+		mailgun: mg,
 		sender: sender,
 	}
 }
 
 func (m *MailgunSender) SendEmail(to []string, subject string, body string) error {
-    mg := mailgun.NewMailgun(m.domain, m.apiKey)
-
-	mg.SetAPIBase(mailgun.APIBaseEU)
-
-    message := mg.NewMessage(m.sender, subject, body, to...)
+    message := m.mailgun.NewMessage(m.sender, subject, body, to...)
     
     ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
     defer cancel()
 
-    _, _, err := mg.Send(ctx, message)
+    _, _, err := m.mailgun.Send(ctx, message)
     return err
 }
