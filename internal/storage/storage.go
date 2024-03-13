@@ -42,7 +42,7 @@ func NewSQLiteStorer(dataSourceName string) (*SQLiteStorer, error) {
     return storer, nil
 }
 
-func (s *SQLiteStorer) runMigrations() error {
+func (s SQLiteStorer) runMigrations() error {
     m, err := migrate.New(
         "file://"+migrationsPath, // file path to migration files
         fmt.Sprintf("sqlite://%s", s.dbPath), // database URL
@@ -58,7 +58,7 @@ func (s *SQLiteStorer) runMigrations() error {
     return nil
 }
 
-func (s *SQLiteStorer) StoreWebsiteStatus(website string, statusCode int, latency time.Duration) error {
+func (s SQLiteStorer) StoreWebsiteStatus(website string, statusCode int, latency time.Duration) error {
 	query := `INSERT INTO website_status (website, status_code, latency) VALUES (?, ?, ?)`
 	
 	latencyMs := latency.Milliseconds()
