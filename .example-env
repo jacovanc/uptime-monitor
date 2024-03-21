@@ -1,3 +1,4 @@
+ENV="dev" # dev or prod
 # Monitor
 DB_PATH="uptime-monitor.db"
 WEBSITES="https://yahoo.com,https://bing.com" # Comma separated list of websites to track the uptime of

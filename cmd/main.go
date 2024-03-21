@@ -15,13 +15,13 @@ import (
 
 func main() {
 	// Load development configuration from .env file
-	if os.Getenv("ENV") != "production" {
+	if os.Getenv("ENV") != "prod" {
 		err := godotenv.Load()
 		if err != nil {
 			log.Fatal("Error loading .env file")
 		}
 	}
-	
+
 	dbPath := os.Getenv("DB_PATH") // If this isn't set, the empty string will be replaced with a default in storage module
 	
 	sqliteStorer, err := storage.NewSQLiteStorer(dbPath)
