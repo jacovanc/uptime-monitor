@@ -1,6 +1,7 @@
 package monitor
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"testing"
@@ -26,7 +27,7 @@ func TestCreateMonitor(t *testing.T) {
 	if monitor.interval.Seconds() != 30 {
 		t.Error("Expected interval to be 30s, got", monitor.interval)
 	}
-	
+
 	// Check monitor.downAlertThreshold is 3
 	if monitor.alertThreshold != 3 {
 		t.Error("Expected downAlertThreshold to be 3, got", monitor.alertThreshold)
@@ -144,14 +145,15 @@ func TestShouldSendAlert(t *testing.T) {
 
 	// Should return false
 	if monitor.shouldSendAlert(website) {
-		t.Error("Expected shouldSendDownAlert to return true")
+		t.Error("Expected shouldSendAlert to return false")
 	}
 
+	log.Println("adding 3rd 500")
 	monitor.appendStatusHistory(website, 500)
 
 	// Should return true
 	if !monitor.shouldSendAlert(website) {
-		t.Error("Expected shouldSendDownAlert to return true")
+		t.Error("Expected shouldSendAlert to return true")
 	}
 }
 

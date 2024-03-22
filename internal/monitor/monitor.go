@@ -202,13 +202,14 @@ func (m *Monitor) shouldSendAlert(website string) bool {
 		return false
 	}
 
+	shouldSendAlert := true
 	for _, statusCode := range history[len(history) - m.alertThreshold:] {
-		if statusCode > 499 || statusCode == 0 { // 0 represents an error on the ping (e.g. if the website does not exist)
-			return true
+		if statusCode < 500 && statusCode != 0 { // If there is any non-500 status code, don't send an alert
+			shouldSendAlert = false
 		}
 	}
 
-	return false
+	return shouldSendAlert
 }
 
 // Check all websites for down alerts and send an email if necessary.

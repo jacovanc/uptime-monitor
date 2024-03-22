@@ -47,9 +47,7 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-
 	server := &http.Server{Addr: ":8080"}
-
 	go func() {
 		fmt.Println("Server is starting...")
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
