@@ -26,7 +26,7 @@ func pingWebsite(website string) (status int, latency time.Duration) {
 	var statusCode int
 
 	// Ping website
-	resp, err := http.Get(website)
+	resp, err := http.Head(website)
 	latency = time.Since(start)
 
 	if(err != nil) {
