@@ -1,6 +1,7 @@
 package monitor
 
 import (
+	"net/http"
 	"os"
 	"testing"
 	"uptime-monitor/internal/mail"
@@ -27,8 +28,8 @@ func TestCreateMonitor(t *testing.T) {
 	}
 	
 	// Check monitor.downAlertThreshold is 3
-	if monitor.downAlertThreshold != 3 {
-		t.Error("Expected downAlertThreshold to be 3, got", monitor.downAlertThreshold)
+	if monitor.alertThreshold != 3 {
+		t.Error("Expected downAlertThreshold to be 3, got", monitor.alertThreshold)
 	}
 
 	// Check monitor.alertEmails
@@ -122,7 +123,7 @@ func TestAppendStatusHistory(t *testing.T) {
 	}
 }
 
-func TestShouldSendDownAlert(t *testing.T) {
+func TestShouldSendAlert(t *testing.T) {
 	website := "https://example.com"
 
 	os.Setenv("WEBSITES", website)
@@ -138,22 +139,86 @@ func TestShouldSendDownAlert(t *testing.T) {
 		t.Error("Expected no error, got", err)
 	}
 
-	// Append 3 status codes 500
-	monitor.appendStatusHistory(website, 500)
 	monitor.appendStatusHistory(website, 500)
 	monitor.appendStatusHistory(website, 500)
 
+	// Should return false
+	if monitor.shouldSendAlert(website) {
+		t.Error("Expected shouldSendDownAlert to return true")
+	}
+
+	monitor.appendStatusHistory(website, 500)
+
 	// Should return true
-	if !monitor.shouldSendDownAlert(website) {
+	if !monitor.shouldSendAlert(website) {
 		t.Error("Expected shouldSendDownAlert to return true")
 	}
 }
 
-func TestPingWebsite(t *testing.T) {
-	// Placeholder for this test.
-	// Probably want to use a mock for the http get request, instead of actually pinging a website
-	// Otherwise our test could fail if the website is down, even if our code is correct.
-	// Also we can't test various status codes, as we can't control the response from the website
+func TestSendAlerts(t *testing.T) {
+	website := "https://example.com"
+	website2 := "https://example2.com"
+
+	os.Setenv("WEBSITES", website + "," + website2)
+	os.Setenv("INTERVAL_SECONDS", "1")
+	os.Setenv("DOWN_ALERT_THRESHOLD", "3")
+	os.Setenv("ALERT_EMAILS", "test@example.com")
+
+	mockDataStorer := &storage.DummyDataStorer{}
+	mockEmailSender := &mail.DummyEmailSender{}
+
+	monitor, err := NewMonitor(mockDataStorer, mockEmailSender)
+	if err != nil {
+		t.Error("Expected no error, got", err)
+	}
+
+	// Append 3 status codes 500 for website 1
+	monitor.appendStatusHistory(website, 500)
+	monitor.appendStatusHistory(website, 500)
+	monitor.appendStatusHistory(website, 500)
+
+	monitor.sendAlerts()
+
+	// Expect that the email sender was called once
+	if mockEmailSender.SendEmailCalled != 1 {
+		t.Error("Expected sendEmail to be called once, got", mockEmailSender.SendEmailCalled)
+	}
+
+	// Append 3 status codes 500 for website 2
+	monitor.appendStatusHistory(website2, 500)
+	monitor.appendStatusHistory(website2, 500)
+	monitor.appendStatusHistory(website2, 500)
+
+	// Expect that the email sender was called once (previous status history not cleared)
+	if mockEmailSender.SendEmailCalled != 1 {
+		t.Error("Expected sendEmail to be called once, got", mockEmailSender.SendEmailCalled)
+	}
 }
 
-// Also, once we have mocked the http get request, we can test the Monitor.tick function (and determine if all the correct dependency mocks were called correctly for different scenarios)
+
+func TestPingWebsite(t *testing.T) {
+	// Create a local server that returns 200 OK
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	go http.ListenAndServe(":8080", nil)
+
+	activeWebsite := "http://localhost:8080" // Use our local server that we know is up and will return a 200 status code
+	inactiveWebsite := "http://localhost:8081" // Use our local server on a port we know is not running and will fail
+
+	statusCode, latency := pingWebsite(activeWebsite)
+
+	if statusCode != 200 {
+		t.Error("Expected status code to be 200, got", statusCode)
+	}
+
+	if latency.Milliseconds() <= 0 {
+		t.Error("Expected latency to be greater than 0, got", latency)
+	}
+
+	statusCode, _ = pingWebsite(inactiveWebsite)
+
+	if statusCode != 0 {
+		t.Error("Expected status code to be 0, got", statusCode)
+	}
+}

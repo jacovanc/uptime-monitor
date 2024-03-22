@@ -25,9 +25,7 @@ func main() {
 		}
 	}
 
-	dbPath := os.Getenv("DB_PATH") // If this isn't set, the empty string will be replaced with a default in storage module
-	
-	sqliteStorer, err := storage.NewSQLiteStorer(dbPath)
+	sqliteStorer, err := storage.NewSQLiteStorer(os.Getenv("DB_PATH"))
 	if err != nil {
 		log.Fatal("Error creating SQLite storer: ", err)
 	}
@@ -37,21 +35,20 @@ func main() {
 		os.Getenv("MAILGUN_API_KEY"),
 		os.Getenv("MAILGUN_SENDER"),
 	)
+
 	monitor, err := monitor.NewMonitor(sqliteStorer, emailSender)
 	if err != nil {
 		log.Fatal("Error creating monitor: ", err)
 	}
-
 	go monitor.Start()
 
 	// Start a webserver that simply returns 200 OK for all requests
+	// This is for deployment status checks, but will be extended later to provide more functionality
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-	log.Println("Defined the routes")
 
 	server := &http.Server{Addr: ":8080"}
-	log.Println("Server created");
 
 	go func() {
 		fmt.Println("Server is starting...")

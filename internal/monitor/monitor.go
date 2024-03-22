@@ -52,7 +52,7 @@ type Monitor struct {
 	
 	websites []string
 	interval time.Duration
-	downAlertThreshold int
+	alertThreshold int
 	alertEmails []string
 
 	statusHistory map[string][]int
@@ -85,23 +85,18 @@ func NewMonitor(ds DataStorer, es EmailSender) (*Monitor, error) {
 		}
 	}
 
-	var downAlertThresholdString = os.Getenv("DOWN_ALERT_THRESHOLD")
-	var downAlertThreshold int
-	downAlertThreshold, err := strconv.Atoi(downAlertThresholdString)
+	alertThreshold, err := strconv.Atoi(os.Getenv("DOWN_ALERT_THRESHOLD"))
 	if err != nil {
 		return nil, errors.New("invalid down_alert_threshold configuration")
 	}
 
-	var alertEmailsString = os.Getenv("ALERT_EMAILS")
-	alertEmails := strings.Split(alertEmailsString, ",")
+	alertEmails := strings.Split(os.Getenv("ALERT_EMAILS"), ",")
 	if len(alertEmails) == 0 {
 		return nil, errors.New("no alert emails configured")
 	}
 
 	log.Println("Creating monitor with interval", interval, "and websites", websites)
-	log.Println("Down alert threshold is", downAlertThreshold, "and alert emails are", alertEmails)
-
-	// TODO: Set up the status history using the DB historical data rather than assuming empty
+	log.Println("Alert threshold is", alertThreshold, "and alert emails are", alertEmails)
 
 	return &Monitor{
 		ds: ds,
@@ -111,7 +106,7 @@ func NewMonitor(ds DataStorer, es EmailSender) (*Monitor, error) {
 		// Config
 		websites: websites,
 		interval: interval,
-		downAlertThreshold: downAlertThreshold,
+		alertThreshold: alertThreshold,
 		alertEmails: alertEmails,
 
 		// State
@@ -129,20 +124,10 @@ func (m *Monitor) Start() {
     m.cancelFunc = cancel // Store the cancel function to call it later
 
 	for _, website := range m.websites {
-		go func(website string) {
-			for {
-				select {
-				case <-ctx.Done():
-					log.Println("Stopping monitor for", website)
-					return
-				default:
-					m.tick(website)
-
-					time.Sleep(m.interval)
-				}
-			}
-		}(website)
+		go m.monitorWebsite(ctx, website)
 	}
+
+	go m.enableAlerts(ctx)
 }
 
 // Stop the monitoring goroutines for each website.
@@ -153,6 +138,34 @@ func (m *Monitor) Stop() {
 		m.cancelFunc()
 		m.isRunning = false
 		m.cancelFunc = nil
+	}
+}
+
+// The monitoring goroutine for a website. Runs until the context says to cancel.
+func (m *Monitor) monitorWebsite(ctx context.Context, website string) {
+	for {
+		select {
+		case <-ctx.Done():
+			log.Println("Stopping monitor for", website)
+			return
+		default:
+			m.tick(website)
+			time.Sleep(m.interval)
+		}
+	}
+}
+
+// The alerting goroutine. Runs until the context says to cancel.
+// Fires alerts for any websites that have been down for the alertThreshold.
+func (m *Monitor) enableAlerts(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			m.sendAlerts()
+			time.Sleep(m.interval * 2) // Allow a bit of extra time before firing alerts to batch them
+		}
 	}
 }
 
@@ -168,17 +181,6 @@ func (m *Monitor) tick(website string) {
 	if err != nil {
 		log.Println("Error storing website status: ", err)
 	}
-
-	if m.shouldSendDownAlert(website) {
-		log.Println("Sending down alert for", website)
-		err := m.es.SendEmail(m.alertEmails, "Website down", website + " is down!")
-		if err != nil {
-			log.Println("Error sending down alert: ", err)
-		}
-
-		// Reset the status history to prevent sending multiple alerts
-		m.statusHistory[website] = []int{}
-	}
 }
 
 // Appends the status to the status history and removes the oldest entry if far enough out of bounds for the required logic.
@@ -186,25 +188,49 @@ func (m *Monitor) appendStatusHistory(website string, statusCode int) {
 	// Update the status history
 	m.statusHistory[website] = append(m.statusHistory[website], statusCode)
 
-	// If the history is longer than the downAlertThreshold * 2, remove the oldest entry (no longer relevant)
-	if len(m.statusHistory[website]) > m.downAlertThreshold * 2 {
+	// If the history is longer than the alertThreshold * 2, remove the oldest entry (no longer relevant)
+	if len(m.statusHistory[website]) > m.alertThreshold * 2 {
 		m.statusHistory[website] = m.statusHistory[website][1:]
 	}
 }
 
-// Checks if the website has been down for the downAlertThreshold and should send an alert.
-func (m *Monitor) shouldSendDownAlert(website string) bool {
+// Checks if the website has been down for the alertThreshold and should send an alert.
+func (m *Monitor) shouldSendAlert(website string) bool {
 	history := m.statusHistory[website]
 
-	if len(m.statusHistory[website]) < m.downAlertThreshold {
+	if len(m.statusHistory[website]) < m.alertThreshold {
 		return false
 	}
 
-	for _, statusCode := range history[len(history) - m.downAlertThreshold:] {
+	for _, statusCode := range history[len(history) - m.alertThreshold:] {
 		if statusCode > 499 || statusCode == 0 { // 0 represents an error on the ping (e.g. if the website does not exist)
 			return true
 		}
 	}
 
 	return false
+}
+
+// Check all websites for down alerts and send an email if necessary.
+// Batches the alerts to send all in one email
+func (m *Monitor) sendAlerts() {
+	var alerts []string
+
+	for _, website := range m.websites {
+		if m.shouldSendAlert(website) {
+			alerts = append(alerts, website)
+
+			// Reset the status history to prevent sending multiple alerts
+			m.statusHistory[website] = []int{}
+		}
+	}
+
+	if len(alerts) > 0 {
+		subject := "Website alert"
+		body := "The following websites are down:\n" + strings.Join(alerts, "\n")
+		err := m.es.SendEmail(m.alertEmails, subject, body)
+		if err != nil {
+			log.Println("Error sending down alert email: ", err)
+		}
+	}
 }
